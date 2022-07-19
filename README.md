@@ -30,6 +30,7 @@ MLP : Clone Coding
 
 # Vision Transformer
 - Transformer 학습 후 다시 안보고 coding 연습
+- CIFAR-10 기준으로 학습 코드 추가
 
 # MLP
 - Inductive Bias 를 줄이는 방향으로 연구가 되고있는 만큼 기초부터 다시 학습의 필요성을 느낌
