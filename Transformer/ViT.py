@@ -172,10 +172,10 @@ transform = transforms.Compose(
 
 batch_size = 8
 
-train_set = torchvision.datasets.CIFAR10(root = './data', train = True, download = True, transform = transform)
+train_set = torchvision.datasets.CIFAR10(root = '../data', train = True, download = True, transform = transform)
 train_loader = DataLoader(train_set, batch_size = batch_size, shuffle = True, num_workers = 1)
 
-test_set = torchvision.datasets.CIFAR10(root = './data', train = False, download = True, transform = transform)
+test_set = torchvision.datasets.CIFAR10(root = '../data', train = False, download = True, transform = transform)
 test_loader = DataLoader(test_set, batch_size = batch_size, shuffle = False, num_workers = 1)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
