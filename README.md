@@ -12,6 +12,12 @@ MLP : Clone Coding
 ## Intro
 전체적으로 Training 과정에 필요한 코드는 없고 Network 중심으로만 Coding
 
+# AlexNet
+- 논문 구조에서 분리하지 않고 하나의 flow로 구현
+- BatchNorm 추가
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.665 (Scratch Training)
+
 # ResNet
 - Skip Connection 적용
 - BottleNeck 적용
