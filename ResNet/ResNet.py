@@ -28,9 +28,9 @@ class bottleneck(nn.Module):
         self.mid_channels = mid_channels
         self.out_channels = out_channels
         self.first = first
-        stride = 1
+        self.stride = 1
         if self.first:
-            stride = 2
+            self.stride = 2
 
         self.conv1 = nn.Conv2d(
             in_channels = self.in_channels,
@@ -43,7 +43,7 @@ class bottleneck(nn.Module):
             in_channels = self.mid_channels,
             out_channels = self.mid_channels,
             kernel_size = 3,
-            stride = stride,
+            stride = self.stride,
             padding = 1
         )
         self.batch2 = nn.BatchNorm2d(num_features=mid_channels)
@@ -54,15 +54,16 @@ class bottleneck(nn.Module):
             kernel_size=1
         )
         self.act3 = nn.ReLU()
-        self.proj = nn.Conv2d(in_channels=self.in_channels, out_channels=self.out_channels, stride = stride, kernel_size=1)
         self.batch3 = nn.BatchNorm2d(num_features=out_channels)
+        self.proj = nn.Sequential(nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride = self.stride), nn.BatchNorm2d(num_features=out_channels))
         self.net = nn.Sequential(self.conv1, self.batch1, self.act1, self.conv2, self.batch2, self.act2, self.conv3)
 
     def forward(self, x):
         x2 = self.net(x)
-        x = self.proj(x)
-        x = torch.add(x2, x)
-        x = self.batch3(x)
+        x2 = self.batch3(x2)
+        if self.first:
+            x = self.proj(x)
+        x = torch.add(x, x2)
         x = self.act3(x)
         return x
 
@@ -145,7 +146,8 @@ device = torch.device('cuda')
 model = ResNet101(in_channels=3, size = 32, classes = 10)
 model.to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(params=model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+optimizer = optim.SGD(params=model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
+# optimizer = optim.AdamW(params=model.parameters(), lr=0.001, weight_decay=0.0005)
 
 EPOCHS = 20
 
@@ -201,4 +203,3 @@ if __name__ == "__main__":
             else:
                 val_loss, val_acc = eval_model(model, test_loader)
                 print(f"Val loss : {val_loss:.5f} Val acc : {val_acc:.3f}")
-
