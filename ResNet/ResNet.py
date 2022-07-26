@@ -1,118 +1,204 @@
 import torch
-from torch import nn
+import torch.nn as nn
+import numpy as np
+import torchvision
+import torchvision.transforms as transforms
 
-class BottleNeck1(nn.Module):
-    def __init__(self, in_channels, out_channels, middle_channels, stride=1, skip_connection = False):
-        super().__init__()
-        self.skip_connection = skip_connection
-        self.model1 = torch.nn.Conv2d(in_channels=in_channels, out_channels=middle_channels, kernel_size=1, stride=1)
-        self.model2 = torch.nn.Conv2d(in_channels=middle_channels, out_channels=middle_channels, kernel_size=3, stride=stride, padding=1)
-        self.model3 = torch.nn.Conv2d(in_channels=middle_channels, out_channels=out_channels, kernel_size=1, stride=1)
+from torch.utils.data import DataLoader
+import torch.optim as optim
+import time
+
+import random
+import torch.backends.cudnn as cudnn
+
+seed = 2022
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+np.random.seed(seed)
+cudnn.benchmark = False
+cudnn.deterministic = True
+random.seed(seed)
+
+
+class bottleneck(nn.Module):
+    def __init__(self, in_channels, mid_channels, out_channels, first = False):
+        super(bottleneck, self).__init__()
+        self.in_channels = in_channels
+        self.mid_channels = mid_channels
+        self.out_channels = out_channels
+        self.first = first
+        stride = 1
+        if self.first:
+            stride = 2
+
+        self.conv1 = nn.Conv2d(
+            in_channels = self.in_channels,
+            out_channels = self.mid_channels,
+            kernel_size=1,
+        )
+        self.batch1 = nn.BatchNorm2d(num_features=mid_channels)
+        self.act1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(
+            in_channels = self.mid_channels,
+            out_channels = self.mid_channels,
+            kernel_size = 3,
+            stride = stride,
+            padding = 1
+        )
+        self.batch2 = nn.BatchNorm2d(num_features=mid_channels)
+        self.act2 = nn.ReLU()
+        self.conv3 = nn.Conv2d(
+            in_channels=self.mid_channels,
+            out_channels=self.out_channels,
+            kernel_size=1
+        )
+        self.act3 = nn.ReLU()
+        self.proj = nn.Conv2d(in_channels=self.in_channels, out_channels=self.out_channels, stride = stride, kernel_size=1)
+        self.batch3 = nn.BatchNorm2d(num_features=out_channels)
+        self.net = nn.Sequential(self.conv1, self.batch1, self.act1, self.conv2, self.batch2, self.act2, self.conv3)
 
     def forward(self, x):
-
-        input_x = x
-        x = self.model1(x)
-        x = nn.BatchNorm2d(x.size(1))(x)
-        x = nn.ReLU(inplace=True)(x)
-
-        x = self.model2(x)
-        x = nn.BatchNorm2d(x.size(1))(x)
-        x = nn.ReLU(inplace=True)(x)
-        x = self.model3(x)
-
-        # print(x.size(), input_x.size())
-        if self.skip_connection == True:
-            input_x = nn.Conv2d(in_channels=input_x.size(1), out_channels=x.size(1), kernel_size=1, stride=1)(input_x)
-
-        x = input_x + x
-        # x = nn.BatchNorm2d(x.size(1))
-        x = nn.ReLU(inplace=True)(x)
+        x2 = self.net(x)
+        x = self.proj(x)
+        x = torch.add(x2, x)
+        x = self.batch3(x)
+        x = self.act3(x)
         return x
 
 
-class BottleNeck2(nn.Module):
-    def __init__(self, in_channels, out_channels, middle_channels, stride=1, skip_connection = False):
-        super().__init__()
-        self.skip_connection = skip_connection
-        self.model1 = torch.nn.Conv2d(in_channels=in_channels, out_channels=middle_channels, kernel_size=1, stride=1)
-        self.model2 = torch.nn.Conv2d(in_channels=middle_channels, out_channels=middle_channels, kernel_size=3, stride=stride, padding=1)
-        self.model3 = torch.nn.Conv2d(in_channels=middle_channels, out_channels=out_channels, kernel_size=1, stride=1)
+
+class ResNet101(nn.Module):
+    def __init__(self, in_channels = 3, size = 224, classes = 10):
+        super(ResNet101, self).__init__()
+        self.classes = classes
+        self.in_channels = in_channels
+        self.size = size
+
+        self.conv1 = nn.Conv2d(in_channels=self.in_channels, out_channels=64, stride=2, kernel_size=7, padding=0)
+        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
+
+        self.conv2 = nn.Sequential(
+            bottleneck(in_channels=64, mid_channels=64, out_channels=256, first=True),
+            bottleneck(in_channels=256, mid_channels=64, out_channels=256),
+            bottleneck(in_channels=256, mid_channels=64, out_channels=256),
+        )
+
+        self.conv3 = nn.Sequential(
+            bottleneck(in_channels=256, mid_channels=128, out_channels=512, first=True),
+            bottleneck(in_channels=512, mid_channels=128, out_channels=512),
+            bottleneck(in_channels=512, mid_channels=128, out_channels=512),
+            bottleneck(in_channels=512, mid_channels=128, out_channels=512),
+        )
+        conv4 = [bottleneck(in_channels=512, mid_channels=256, out_channels=1024, first=True)]
+        conv4_2 = [bottleneck(in_channels=1024, mid_channels=256, out_channels=1024) for _ in range(22)]
+        conv4.extend(conv4_2)
+        self.conv4 = nn.Sequential(*conv4)
+
+        self.conv5 = nn.Sequential(
+            bottleneck(in_channels=1024, mid_channels=512, out_channels=2048, first=True),
+            bottleneck(in_channels=2048, mid_channels=512, out_channels=2048),
+            bottleneck(in_channels=2048, mid_channels=512, out_channels=2048),
+        )
+
+        self.pool2 = nn.AdaptiveAvgPool2d((1, 1))
+        self.features = nn.Sequential(
+            self.conv1,
+            self.pool1,
+            self.conv2,
+            self.conv3,
+            self.conv4,
+            self.conv5,
+            self.pool2
+        )
+        self.flat = nn.Flatten()
+        self.Linear = nn.Linear(in_features=2048, out_features=self.classes)
+        self.soft = nn.Softmax(dim = 1)
+        self.classifiers = nn.Sequential(
+            self.Linear,
+            self.soft
+        )
 
     def forward(self, x):
-
-        input_x = x
-        x = self.model1(x)
-        x = nn.BatchNorm2d(x.size(1))(x)
-        x = nn.ReLU(inplace=True)(x)
-
-        x = self.model2(x)
-        x = nn.BatchNorm2d(x.size(1))(x)
-        x = nn.ReLU(inplace=True)(x)
-        x = self.model3(x)
-
-        if self.skip_connection:
-
-            input_x = nn.Conv2d(in_channels=input_x.size(1), out_channels=x.size(1), kernel_size=1, stride=2)(input_x)
-        # print(x.size(), input_x.size())
-        x = x + input_x
-        # x = nn.BatchNorm2d(x.size(1))
-
-        x = nn.ReLU(inplace=True)(x)
-        return x
-
-
-
-class ResNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3)
-        self.Maxpool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.conv2_x = nn.Sequential(BottleNeck1(in_channels=64, middle_channels = 64, out_channels=256, skip_connection = True),
-                                     BottleNeck1(in_channels=256, middle_channels = 64,out_channels=256, skip_connection = True),
-                                     BottleNeck1(in_channels=256, middle_channels = 64,out_channels=256, skip_connection = True))
-
-        self.conv3_x = nn.Sequential(BottleNeck2(in_channels=256, middle_channels = 128, out_channels=512, stride=2, skip_connection=True),
-                                     BottleNeck1(in_channels=512, middle_channels = 128, out_channels=512, skip_connection = True),
-                                     BottleNeck1(in_channels=512, middle_channels = 128, out_channels=512, skip_connection = True),
-                                     BottleNeck1(in_channels=512, middle_channels = 128, out_channels=512, skip_connection = True))
-        self.conv4_x = nn.Sequential(BottleNeck2(in_channels=512, middle_channels = 256, out_channels=1024, stride=2, skip_connection=True),
-                                     BottleNeck1(in_channels=1024, middle_channels = 256, out_channels=1024, skip_connection = True),
-                                     BottleNeck1(in_channels=1024, middle_channels = 256, out_channels=1024, skip_connection = True),
-                                     BottleNeck1(in_channels=1024, middle_channels = 256, out_channels=1024, skip_connection = True),
-                                     BottleNeck1(in_channels=1024, middle_channels = 256, out_channels=1024, skip_connection = True),
-                                     BottleNeck1(in_channels=1024, middle_channels = 256, out_channels=1024, skip_connection = True))
-        self.conv5_x = nn.Sequential(BottleNeck2(in_channels=1024, middle_channels = 512, out_channels=2048, stride=2, skip_connection=True),
-                                     BottleNeck1(in_channels=2048, middle_channels = 512, out_channels=2048, skip_connection = True),
-                                     BottleNeck1(in_channels=2048, middle_channels = 512, out_channels=2048, skip_connection = True))
-        self.Avgpool1 = nn.AvgPool2d(kernel_size=7, stride=1)
-
-
-        self.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
-
-    def forward(self, x):
-
-        x = self.conv1(x)
-        # print(x.size())
-        x = self.Maxpool1(x)
-        # print(x.size())
-        x = self.conv2_x(x)
-        x = self.conv3_x(x)
-        x = self.conv4_x(x)
-        x = self.conv5_x(x)
-        x = self.Avgpool1(x)
-        x = nn.Flatten()(x)
-        x = self.fc(x)
-        print(x)
-        x = nn.Softmax()(x)
+        x = self.features(x)
+        x = self.flat(x)
+        x = self.classifiers(x)
 
         return x
 
 
-x = torch.randn((10, 3, 224, 224))
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
 
+train_set = torchvision.datasets.CIFAR10(root = '../data', train = True, transform=transform, download=True)
+test_set = torchvision.datasets.CIFAR10(root = '../data', train = False, transform=transform, download=True)
 
-model = ResNet()
-print(x, torch.max(model(x), 1)[1])
-print(model(x))
+BATCH_SIZE = 16
+train_loader = DataLoader(train_set, shuffle=True, batch_size=BATCH_SIZE, num_workers=1)
+test_loader = DataLoader(test_set, shuffle=False, batch_size=BATCH_SIZE, num_workers=1)
+
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+device = torch.device('cuda')
+
+model = ResNet101(in_channels=3, size = 32, classes = 10)
+model.to(device)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(params=model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+
+EPOCHS = 20
+
+def eval_model(model, data):
+    model.eval()
+    with torch.no_grad():
+        t_count = 0
+        a_count = 0
+        t_loss = 0
+        for j, data2 in enumerate(data):
+            inputs, labels = data2[0].to(device), data2[1].to(device)
+            t_count += len(inputs)
+            preds = model(inputs)
+            loss = criterion(preds, labels)
+            output = torch.argmax(preds, dim=1)
+            a_count += sum(output == labels)
+            t_loss += loss
+    model.train()
+    val_loss = t_loss / t_count
+    val_acc = a_count / t_count
+    return val_loss, val_acc
+
+if __name__ == "__main__":
+    for epoch in range(EPOCHS):
+        for dset in ['train', 'test']:
+            if dset == 'train':
+                model.train()
+            else:
+                model.eval()
+            a_count = 0
+            t_count = 0
+            t_loss = 0
+            if dset == 'train':
+                start = time.time()
+                for i, data in enumerate(train_loader):
+                    inputs, labels = data[0].to(device), data[1].to(device)
+                    t_count += len(inputs)
+                    optimizer.zero_grad()
+                    preds = model(inputs)
+                    loss = criterion(preds, labels)
+                    loss.backward()
+                    optimizer.step()
+
+                    output = torch.argmax(preds, dim = 1)
+                    a_count += sum(output == labels)
+                    t_loss += loss
+                    if (i + 1) % 1000 == 0:
+                        print(f"loss : {t_loss / t_count:.5f} acc : {a_count / t_count:.3f}")
+                time_delta = time.time() - start
+                print(f"Final Train Acc : {a_count / t_count:.3f}")
+                print(f"Final Train Loss : {t_loss / t_count:.5f}")
+                print(f'Train Finished in {time_delta // 60}mins {time_delta % 60} secs')
+            else:
+                val_loss, val_acc = eval_model(model, test_loader)
+                print(f"Val loss : {val_loss:.5f} Val acc : {val_acc:.3f}")
 
