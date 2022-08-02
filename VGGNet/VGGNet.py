@@ -29,6 +29,10 @@ def conv(stride = 1, padding = 1, kernel_size = 3, in_channels = 3, out_channels
 
 class VGGNet(nn.Module):
     def __init__(self, layers = 16, in_channels = 3, num_classes = 10, size = 224):
+        """
+        :param layers: 16 or 19 (number of layers)
+        :param size: input size
+        """
         super(VGGNet, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes

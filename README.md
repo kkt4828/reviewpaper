@@ -18,12 +18,15 @@ MLP : Clone Coding
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
   - acc : 0.665 (Scratch Training)
 
+# VGGNet
+- 16 or 19 layers 기준으로 구현
+- Max pooling, batch norm, ReLU 적용
+
 # ResNet
 - Skip Connection 적용
-- BottleNeck 적용
-  - 첫 maxpooling에 의한 size가 반으로 줄어든 block과 나머지 block에 대해서 다른 bottleneck 적용
-    - 좀 더 개선하여 통합된 class로 구현이 필요함
-- 논문 network만 보고 구현하여 refactoring이 필요함
+- ResNet101 기준으로 구현
+- BatchNorm 적용
+- Bottlenect은 변수를 통해 stride만 조절되는 형태로 refactoring
 
 # DenseNet
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
