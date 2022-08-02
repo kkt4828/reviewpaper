@@ -102,7 +102,7 @@ class DenseNet(nn.Module):
             out_channels=self.k * 2,
             kernel_size=7,
             stride=2,
-            padding=4
+            padding=0
         )
         self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.net1 = nn.Sequential(

@@ -30,7 +30,7 @@ MLP : Clone Coding
 
 # DenseNet
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
-- CIFAR10 기준이라 7x7 conv 부분은 parameter 조정 필요
+- CIFAR10 기준이라 7x7 conv 부분은 parameter 조정 필요 => padding = 0 으로 조정완료
 - Unit Block 마다 skip connection 적용
 
 # Transformer
