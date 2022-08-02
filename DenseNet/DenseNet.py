@@ -44,9 +44,16 @@ class DenseUnitBlock(nn.Module):
         self.net = nn.Sequential(
             self.batch1, self.relu1, self.conv1, self.batch2, self.relu2, self.conv2
         )
+        self.proj = nn.Conv2d(
+            in_channels=in_features,
+            out_channels=out_features,
+            kernel_size=1
+        )
     def forward(self, x):
-        x = self.net(x)
-        return x
+        x2 = self.net(x)
+        x = self.proj(x)
+        x2 = x2.add(x)
+        return x2
 
 class DenseBlock(nn.Module):
     def __init__(self, L, k_0 = 16, k = 12):

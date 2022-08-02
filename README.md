@@ -26,11 +26,9 @@ MLP : Clone Coding
 - 논문 network만 보고 구현하여 refactoring이 필요함
 
 # DenseNet
-- 쥬피터 노트북으로 셀단위로 구현함
-- DenseBlock 및 Skip Connection 구현
-- DenseBlock 부분의 refactoring 필요
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
 - CIFAR10 기준이라 7x7 conv 부분은 parameter 조정 필요
+- Unit Block 마다 skip connection 적용
 
 # Transformer
 - Github 공식 코드 Clone Coding
