@@ -29,6 +29,8 @@ MLP : Clone Coding
 - ResNet101 기준으로 구현
 - BatchNorm 적용
 - Bottleneck은 변수를 통해 stride만 조절되는 형태로 refactoring
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.691 (Scratch Training)
 
 # DenseNet
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
