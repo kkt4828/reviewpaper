@@ -21,17 +21,21 @@ MLP : Clone Coding
 # VGGNet
 - 16 or 19 layers 기준으로 구현
 - Max pooling, batch norm, ReLU 적용
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.817 (Scratch Training)
 
 # ResNet
 - Skip Connection 적용
 - ResNet101 기준으로 구현
 - BatchNorm 적용
-- Bottlenect은 변수를 통해 stride만 조절되는 형태로 refactoring
+- Bottleneck은 변수를 통해 stride만 조절되는 형태로 refactoring
 
 # DenseNet
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
 - CIFAR10 기준이라 7x7 conv 부분은 parameter 조정 필요 => padding = 0 으로 조정완료
 - Unit Block 마다 skip connection 적용
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.760 (Scratch Training)
 
 # Transformer
 - Github 공식 코드 Clone Coding

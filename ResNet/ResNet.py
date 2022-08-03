@@ -22,15 +22,13 @@ random.seed(seed)
 
 
 class bottleneck(nn.Module):
-    def __init__(self, in_channels, mid_channels, out_channels, first = False):
+    def __init__(self, in_channels, mid_channels, out_channels, first = False, stride = 1):
         super(bottleneck, self).__init__()
         self.in_channels = in_channels
         self.mid_channels = mid_channels
         self.out_channels = out_channels
         self.first = first
-        self.stride = 1
-        if self.first:
-            self.stride = 2
+        self.stride = stride
 
         self.conv1 = nn.Conv2d(
             in_channels = self.in_channels,
@@ -86,18 +84,18 @@ class ResNet101(nn.Module):
         )
 
         self.conv3 = nn.Sequential(
-            bottleneck(in_channels=256, mid_channels=128, out_channels=512, first=True),
+            bottleneck(in_channels=256, mid_channels=128, out_channels=512, first=True, stride = 2),
             bottleneck(in_channels=512, mid_channels=128, out_channels=512),
             bottleneck(in_channels=512, mid_channels=128, out_channels=512),
             bottleneck(in_channels=512, mid_channels=128, out_channels=512),
         )
-        conv4 = [bottleneck(in_channels=512, mid_channels=256, out_channels=1024, first=True)]
+        conv4 = [bottleneck(in_channels=512, mid_channels=256, out_channels=1024, first=True, stride = 2)]
         conv4_2 = [bottleneck(in_channels=1024, mid_channels=256, out_channels=1024) for _ in range(22)]
         conv4.extend(conv4_2)
         self.conv4 = nn.Sequential(*conv4)
 
         self.conv5 = nn.Sequential(
-            bottleneck(in_channels=1024, mid_channels=512, out_channels=2048, first=True),
+            bottleneck(in_channels=1024, mid_channels=512, out_channels=2048, first=True, stride = 2),
             bottleneck(in_channels=2048, mid_channels=512, out_channels=2048),
             bottleneck(in_channels=2048, mid_channels=512, out_channels=2048),
         )
