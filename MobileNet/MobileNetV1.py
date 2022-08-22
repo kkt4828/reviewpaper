@@ -112,6 +112,7 @@ class MobileNetV1(nn.Module):
         return x
 
 transform = transforms.Compose([
+    transforms.Resize(64),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
@@ -132,6 +133,7 @@ model = MobileNetV1(3, 10)
 model.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(params=model.parameters(), lr = 0.001, momentum=0.9, weight_decay=0.0005)
+# optimizer = optim.Adam(params=model.parameters(), lr = 0.001, weight_decay=0.0005)
 
 def eval_model(model, data):
     model.eval()
