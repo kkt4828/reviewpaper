@@ -44,6 +44,10 @@ MLP : Clone Coding
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
   - acc : 0.553 (Scratch Training) 
 
+# ShuffleNetv1
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.638 (Scratch Training) 
+
 # Transformer
 - Github 공식 코드 Clone Coding
   - 이후 안보고 coding 후 비교하는 방향으로 연습필요
