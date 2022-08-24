@@ -42,7 +42,10 @@ MLP : Clone Coding
 # MobileNetv1
 - Depthwise Separable Convolution은 Pytorch의 groups parameter와 1x1 Convolution을 combine하여 구현
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
-  - acc : 0.553 (Scratch Training) 
+  - acc : 0.553 (Scratch Training)
+# MobileNetv2
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.469 (Scratch Training), 0.604 (epoch 75)
 
 # ShuffleNetv1
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
