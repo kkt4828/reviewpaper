@@ -32,6 +32,12 @@ MLP : Clone Coding
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
   - acc : 0.691 (Scratch Training)
 
+# SENet
+- Squeeze-Extraction class 구현
+- ResNet101 기준으로 SE 추가
+- CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.737 (Scratch Training)
+
 # DenseNet
 - DenseNet.py에 다시 구현, Skip Connection은 적용하지 않음
 - CIFAR10 기준이라 7x7 conv 부분은 parameter 조정 필요 => padding = 0 으로 조정완료
