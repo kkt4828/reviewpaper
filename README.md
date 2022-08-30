@@ -62,12 +62,14 @@ MLP : Clone Coding
 
 # Transformer
 - Github 공식 코드 Clone Coding
-  - 이후 안보고 coding 후 비교하는 방향으로 연습필요
+- ViT 구현에 필요한 개념 이해를 위한 연습정도로 마무리
 
 # Vision Transformer
-- Embedding부터 MLP head까지 모두 구현
+- Embedding부터 MLP head까지 모두 직접구현
 - GPU문제로 MLP head는 fine tuning 버전으로 구현
 - CIFAR-10 기준으로 학습 코드 추가
+- CIFAR-10 / epoch 20 / SGD(lr : 0.01, momentum : 0.9, weight_decay : 0.0005)
+  - acc : 0.438 (Scratch Training)
 
 # MLP
 - Inductive Bias 를 줄이는 방향으로 연구가 되고있는 만큼 기초부터 다시 학습의 필요성을 느낌

@@ -141,7 +141,7 @@ device = torch.device('cuda')
 model = VisionTransformer(device=device, batch_size=batch_size, out_dim = 144, img_size=32, patch_size=4)
 model.to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(params=model.parameters(), lr = 0.001, momentum=0.9, weight_decay=0.0005)
+optimizer = optim.SGD(params=model.parameters(), lr = 0.01, momentum=0.9, weight_decay=0.0005)
 # optimizer = optim.Adam(params=model.parameters(), lr = 0.001, weight_decay=0.0005)
 
 def eval_model(model, data):
