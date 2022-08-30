@@ -50,8 +50,11 @@ MLP : Clone Coding
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
   - acc : 0.553 (Scratch Training)
 # MobileNetv2
+- Linear Bottleneck, Inverted Residuals, ReLU6 적용
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
   - acc : 0.469 (Scratch Training), 0.604 (epoch 75)
+# MobileNetv3
+- v2의 Bottleneck과 SENet의 Squeeze-extraction 및 H-Swish 적용 버전으로 Large 모델 구현 
 
 # ShuffleNetv1
 - CIFAR-10 / epoch 20 / SGD(lr : 0.001, momentum : 0.9, weight_decay : 0.0005)
@@ -62,7 +65,8 @@ MLP : Clone Coding
   - 이후 안보고 coding 후 비교하는 방향으로 연습필요
 
 # Vision Transformer
-- Transformer 학습 후 다시 안보고 coding 연습
+- Embedding부터 MLP head까지 모두 구현
+- GPU문제로 MLP head는 fine tuning 버전으로 구현
 - CIFAR-10 기준으로 학습 코드 추가
 
 # MLP
