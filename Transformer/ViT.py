@@ -20,23 +20,25 @@ cudnn.deterministic = True
 random.seed(seed)
 
 class LinearPatchProjection(nn.Module):
-    def __init__(self, batch_size, out_dim = 768, img_size=224, patch_size = 16, channel_size = 3):
+    def __init__(self, device, batch_size, out_dim = 768, img_size=224, patch_size = 16, channel_size = 3,):
         super(LinearPatchProjection, self).__init__()
+        self.device = device
         self.b = batch_size
         self.p = patch_size
         self.c = channel_size
+        self.out_dim = out_dim
         self.n = img_size ** 2 // (patch_size ** 2)
 
-        self.x_cls = nn.Parameter(torch.randn(batch_size, 1, out_dim), requires_grad=True)
-        self.x_pos = nn.Parameter(torch.randn(batch_size, self.n + 1, out_dim), requires_grad=True)
 
-        self.projection = nn.Linear(in_features=patch_size**2 * channel_size, out_features=out_dim)
+        self.projection = nn.Linear(in_features=self.p**2 * self.c, out_features=self.out_dim)
 
     def forward(self, x):
         x = x.view(-1, self.n, (self.p ** 2) * self.c)
         x_p = self.projection(x)
-        x_p = torch.concat((self.x_cls, x_p), dim = 1)
-        x = torch.add(x_p, self.x_pos)
+        x_cls = nn.Parameter(torch.randn(x_p.size(0), 1, self.out_dim), requires_grad=True).to(device)
+        x_pos = nn.Parameter(torch.randn(x_p.size(0), self.n + 1, self.out_dim), requires_grad=True).to(device)
+        x_p = torch.concat((x_cls, x_p), dim = 1)
+        x = torch.add(x_p, x_pos)
 
         return x
 
@@ -100,9 +102,10 @@ class Encoder(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    def __init__(self, L = 12, out_dim = 768, h = 12, ML = 3096, num_classes = 10, img_size=224, patch_size = 16, channel_size = 3, batch_size = 16):
+    def __init__(self, device, L = 12, out_dim = 768, h = 12, ML = 3096, num_classes = 10, img_size=224, patch_size = 16, channel_size = 3, batch_size = 16):
         super(VisionTransformer, self).__init__()
-        self.embedding = LinearPatchProjection(batch_size, out_dim, img_size, patch_size, channel_size)
+        self.batch_size = batch_size
+        self.embedding = LinearPatchProjection(device, self.batch_size, out_dim, img_size, patch_size, channel_size)
         self.transencoder = nn.Sequential(*[Encoder(out_dim, h) for _ in range(L)])
         self.flatten = nn.Flatten()
         self.mlphead = nn.Sequential(nn.Linear(((img_size // patch_size) ** 2 + 1) * out_dim , num_classes))
@@ -118,12 +121,12 @@ class VisionTransformer(nn.Module):
         return x
 
 transform = transforms.Compose([
-    transforms.Resize(224),
+    # transforms.Resize(32),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-batch_size = 16
+batch_size = 64
 
 train_set = torchvision.datasets.CIFAR10(root = '../data', train = True, transform=transform, download=True)
 test_set = torchvision.datasets.CIFAR10(root = '../data', train = False, transform=transform, download=True)
@@ -131,11 +134,11 @@ test_set = torchvision.datasets.CIFAR10(root = '../data', train = False, transfo
 train_loader = DataLoader(train_set, shuffle=True, num_workers=1, batch_size=batch_size)
 test_loader = DataLoader(test_set, shuffle=False, num_workers=1, batch_size=batch_size)
 
-EPOCHS = 100
+EPOCHS = 20
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 device = torch.device('cuda')
 
-model = VisionTransformer(batch_size=batch_size)
+model = VisionTransformer(device=device, batch_size=batch_size, out_dim = 144, img_size=32, patch_size=4)
 model.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(params=model.parameters(), lr = 0.001, momentum=0.9, weight_decay=0.0005)
